@@ -1,0 +1,6 @@
+python3 ../train.py \
+  --dataset_dir ../datasets/spring \
+  --n 1 \
+  --name spring \
+  --save_dir ../path \
+  --log_dir ../runs

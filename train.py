@@ -9,19 +9,25 @@ from the_hnn import SelfSupHNN
 
 def get_args():
 	parser = ArgumentParser(description=None)
-	parser.add_argument('--dataset', type=str)
+	parser.add_argument('--dataset_dir', type=str)
 	parser.add_argument('--learn_rate', default=1e-3, type=float)
 	parser.add_argument('--hidden_dim', default=520, type=int)
 	parser.add_argument('--nonlinearity', default='tanh', type=str)
 	parser.add_argument('--save_dir', default='path')
 	parser.add_argument('--name', default='selfsup_hnn')
+	parser.add_argument('--n', type=int)
+	parser.add_argument('--log_dir', default='runs', type=str)
 	return parser.parse_args()
 
-def train(writer, dataset, learn_rate, hidden_dim, nonlinearity):
+total_i = 0
+def log(writer, loss):
+	global total_i
+	writer.add_scalar('Loss/train', loss, total_i)
+	total_i += 1
+
+def train(writer, model, dataset, learn_rate):
 	dataset = load_dataset(dataset)
-	model = SelfSupHNN(len(dataset[0][0]['x']) // 2, hidden_dim, nonlinearity)
 	optim = torch.optim.Adam(model.parameters(), learn_rate, weight_decay=1e-4)
-	stats = []
 	
 	dataset_size = len(dataset)
 	data_size = len(dataset[0])
@@ -34,25 +40,35 @@ def train(writer, dataset, learn_rate, hidden_dim, nonlinearity):
 			loss.backward()
 			optim.step()
 			last_loss = loss.item()
-			writer.add_scalar('Loss/train', loss, i*dataset_size+j)
-			stats.append(last_loss)
+			log(writer, loss)
 			
-		if i % 100 == 0:
+		if i % 10 == 0:
 			print(f"{i}: {last_loss}")
-	
-	return model, stats
 
 if __name__ == '__main__':
 	args = get_args()
-	if not args.dataset:
-		print('Specify dataset with "--dataset"')
+	if not args.dataset_dir:
+		print('Specify dataset dir with "--dataset_dir"')
 		exit()
-	writer = SummaryWriter()
-	model, stats = train(writer, args.dataset, args.learn_rate,
-	                     args.hidden_dim, args.nonlinearity)
+	if not args.n:
+		print('Specify DOF with "--n"')
+		exit()
+		
+	writer = SummaryWriter(log_dir=args.log_dir)
+	model = SelfSupHNN(args.n, args.hidden_dim, args.nonlinearity)
+	
+	if torch.cuda.is_available():
+		torch.device('cuda')
+		torch.set_default_tensor_type('torch.cuda.FloatTensor')
+		model.cuda()
+	
+	epoch = 0
+	for dataset in os.listdir(args.dataset_dir):
+		print(f"Epoch {epoch}:")
+		train(writer, model, f"{args.dataset_dir}/{dataset}", args.learn_rate)
+		epoch += 1
 	writer.close()
 	
 	if not os.path.exists(args.save_dir):
 		os.makedirs(args.save_dir)
-	
 	torch.save(model.state_dict(), f"{args.save_dir}/{args.name}.tar")

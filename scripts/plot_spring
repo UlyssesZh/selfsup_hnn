@@ -1,0 +1,7 @@
+python3 ../output.py \
+  --load_path ../path/spring.tar \
+  --initial 2,0 \
+  --max_t 100 \
+  --steps 1000 \
+  --n 1 \
+  --ground_truth "tx[1]**2+tx[2]**2"

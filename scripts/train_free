@@ -1,0 +1,6 @@
+python3 ../train.py \
+  --dataset_dir ../datasets/free \
+  --n 1 \
+  --name free \
+  --save_dir ../path \
+  --log_dir ../runs

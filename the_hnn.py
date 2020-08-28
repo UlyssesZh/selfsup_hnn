@@ -1,6 +1,8 @@
 import torch
 from torchdiffeq import odeint
 
+import hamiltonian
+
 class SelfSupHNN(torch.nn.Module):
 	def __init__(self, n, hidden_dim, nonlinearity):
 		super().__init__()
@@ -14,22 +16,17 @@ class SelfSupHNN(torch.nn.Module):
 		torch.nn.init.orthogonal_(self.linear3.weight)
 		
 		self.nonlinearity = getattr(torch, nonlinearity)
+		
+		self.dx = hamiltonian.dx_fun(self)
 	
 	def forward(self, tx):
 		return self.linear3(self.nonlinearity(self.linear2(self.nonlinearity(self.linear1(tx)))))
 	
 	def predict(self, t1, x1, t2):
-		def fun(t, x):
-			tx = torch.cat([torch.tensor([t]), x])
-			tx.requires_grad_(True)
-			self(tx).backward()
-			_, dq, dp = torch.split(tx.grad, [1, self.n, self.n])
-			return torch.cat((dp, -dq), 0)
-		return odeint(fun, x1, torch.tensor([t1, t2]))[-1]
+		return odeint(self.dx, x1, torch.tensor([t1, t2]))[-1]
 	
 	def loss(self, data1, data2):
 		loss = torch.nn.MSELoss()
 		input = self.predict(data1['t'], torch.tensor(data1['x']), data2['t'])
-		input.requires_grad_(True)
 		target = torch.tensor(data2['x'])
 		return loss(input, target)

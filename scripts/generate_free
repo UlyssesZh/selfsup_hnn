@@ -1,0 +1,17 @@
+#!/usr/bin/env ruby
+
+16.times do |i|
+  fork { system <<HEREDOC }
+echo "
+import sys
+sys.path.append('..')
+import dataset
+import torch
+dataset.generate_dataset('../datasets/free/free-#{i}.json',
+                         (lambda tx: tx[2]**2),
+                         118, 42,
+                         torch.tensor([-100.,-100.]), torch.tensor([100.,100.]),
+                         100, id=#{i})
+" | python3
+HEREDOC
+end
