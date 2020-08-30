@@ -3,4 +3,5 @@ python3 ../train.py \
   --n 1 \
   --name spring \
   --save_dir ../path \
-  --log_dir ../runs
+  --log_dir ../runs \
+  --learn_rate 1

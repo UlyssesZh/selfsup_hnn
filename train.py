@@ -17,6 +17,7 @@ def get_args():
 	parser.add_argument('--name', default='selfsup_hnn')
 	parser.add_argument('--n', type=int)
 	parser.add_argument('--log_dir', default='runs', type=str)
+	parser.add_argument('--batch_size', default=10, type=int)
 	return parser.parse_args()
 
 total_i = 0
@@ -25,25 +26,30 @@ def log(writer, loss):
 	writer.add_scalar('Loss/train', loss, total_i)
 	total_i += 1
 
-def train(writer, model, dataset, learn_rate):
+def train(writer, model, dataset, learn_rate, batch_size):
 	dataset = load_dataset(dataset)
 	optim = torch.optim.Adam(model.parameters(), learn_rate, weight_decay=1e-4)
 	
 	dataset_size = len(dataset)
 	data_size = len(dataset[0])
 	
-	for i in range(data_size - 1):
+	for i in range(0, data_size - 1, batch_size):
 		last_loss = None
 		for j in range(dataset_size):
-			loss = model.loss(dataset[j][i], dataset[j][i + 1])
+			loss = torch.tensor(0.)
+			k = 0
+			for k in range(batch_size):
+				if i + k == data_size - 1:
+					break
+				loss += model.loss(dataset[j][i + k], dataset[j][i + k + 1])
+			loss /= k
 			optim.zero_grad()
 			loss.backward()
 			optim.step()
 			last_loss = loss.item()
 			log(writer, loss)
-			
-		if i % 10 == 0:
-			print(f"{i}: {last_loss}")
+		
+		print(f"{i}: {last_loss}")
 
 if __name__ == '__main__':
 	args = get_args()
@@ -57,15 +63,15 @@ if __name__ == '__main__':
 	writer = SummaryWriter(log_dir=args.log_dir)
 	model = SelfSupHNN(args.n, args.hidden_dim, args.nonlinearity)
 	
-	if torch.cuda.is_available():
+	'''if torch.cuda.is_available():
 		torch.device('cuda')
 		torch.set_default_tensor_type('torch.cuda.FloatTensor')
-		model.cuda()
+		model.cuda()'''
 	
 	epoch = 0
 	for dataset in os.listdir(args.dataset_dir):
 		print(f"Epoch {epoch}:")
-		train(writer, model, f"{args.dataset_dir}/{dataset}", args.learn_rate)
+		train(writer, model, f"{args.dataset_dir}/{dataset}", args.learn_rate, args.batch_size)
 		epoch += 1
 	writer.close()
 	
