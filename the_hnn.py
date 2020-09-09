@@ -7,7 +7,7 @@ class SelfSupHNN(torch.nn.Module):
 	def __init__(self, n, hidden_dim, nonlinearity):
 		super().__init__()
 		self.n = n
-		self.linear1 = torch.nn.Linear(1+n*2, hidden_dim)
+		self.linear1 = torch.nn.Linear(n*2, hidden_dim)
 		self.linear2 = torch.nn.Linear(hidden_dim, hidden_dim)
 		self.linear3 = torch.nn.Linear(hidden_dim, 1, bias=False)
 		
@@ -20,13 +20,9 @@ class SelfSupHNN(torch.nn.Module):
 		self.dx = hamiltonian.dx_fun(self)
 	
 	def forward(self, tx):
-		return self.linear3(self.nonlinearity(self.linear2(self.nonlinearity(self.linear1(tx)))))
+		return self.linear3(self.nonlinearity(self.linear2(self.nonlinearity(self.linear1(tx))))).squeeze()
 	
-	def predict(self, t1, x1, t2):
-		return odeint(self.dx, x1, torch.tensor([t1, t2]))[-1]
-	
-	def loss(self, data1, data2):
-		loss = torch.nn.MSELoss()
-		input = self.predict(data1['t'], torch.tensor(data1['x']), data2['t'])
-		target = torch.tensor(data2['x'])
-		return loss(input, target)
+	def loss(self, x1, x2, t):
+		x1 = torch.tensor(x1, requires_grad=True)
+		x2 = torch.tensor(x2)
+		return torch.nn.MSELoss()(odeint(self.dx, x1, torch.tensor(t))[-1], x2)

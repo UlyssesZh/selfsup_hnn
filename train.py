@@ -11,13 +11,12 @@ def get_args():
 	parser = ArgumentParser(description=None)
 	parser.add_argument('--dataset_dir', type=str)
 	parser.add_argument('--learn_rate', default=1e-3, type=float)
-	parser.add_argument('--hidden_dim', default=520, type=int)
+	parser.add_argument('--hidden_dim', default=200, type=int)
 	parser.add_argument('--nonlinearity', default='tanh', type=str)
 	parser.add_argument('--save_dir', default='path')
 	parser.add_argument('--name', default='selfsup_hnn')
 	parser.add_argument('--n', type=int)
 	parser.add_argument('--log_dir', default='runs', type=str)
-	parser.add_argument('--batch_size', default=10, type=int)
 	return parser.parse_args()
 
 total_i = 0
@@ -26,30 +25,14 @@ def log(writer, loss):
 	writer.add_scalar('Loss/train', loss, total_i)
 	total_i += 1
 
-def train(writer, model, dataset, learn_rate, batch_size):
-	dataset = load_dataset(dataset)
+def train(writer, model, dataset, learn_rate):
 	optim = torch.optim.Adam(model.parameters(), learn_rate, weight_decay=1e-4)
-	
-	dataset_size = len(dataset)
-	data_size = len(dataset[0])
-	
-	for i in range(0, data_size - 1, batch_size):
-		last_loss = None
-		for j in range(dataset_size):
-			loss = torch.tensor(0.)
-			k = 0
-			for k in range(batch_size):
-				if i + k == data_size - 1:
-					break
-				loss += model.loss(dataset[j][i + k], dataset[j][i + k + 1])
-			loss /= k
-			optim.zero_grad()
-			loss.backward()
-			optim.step()
-			last_loss = loss.item()
-			log(writer, loss)
-		
-		print(f"{i}: {last_loss}")
+	loss = model.loss(dataset['x1'], dataset['x2'], dataset['t'])
+	optim.zero_grad()
+	loss.backward()
+	optim.step()
+	log(writer, loss)
+	return loss.item()
 
 if __name__ == '__main__':
 	args = get_args()
@@ -63,16 +46,23 @@ if __name__ == '__main__':
 	writer = SummaryWriter(log_dir=args.log_dir)
 	model = SelfSupHNN(args.n, args.hidden_dim, args.nonlinearity)
 	
-	'''if torch.cuda.is_available():
+	if torch.cuda.is_available():
 		torch.device('cuda')
 		torch.set_default_tensor_type('torch.cuda.FloatTensor')
-		model.cuda()'''
+		model.cuda()
+	torch.autograd.set_detect_anomaly(True)
 	
-	epoch = 0
-	for dataset in os.listdir(args.dataset_dir):
-		print(f"Epoch {epoch}:")
-		train(writer, model, f"{args.dataset_dir}/{dataset}", args.learn_rate, args.batch_size)
-		epoch += 1
+	step = 0
+	dataset_list = [load_dataset(f'{args.dataset_dir}/{dataset}')
+	                for dataset in os.listdir(args.dataset_dir)]
+	for epoch in range(160):
+		for dataset in dataset_list:
+			dataset = dataset_list[0]#
+			loss = train(writer, model, dataset, args.learn_rate)
+			step += 1
+			if step % 200 == 0:
+				print(step, '- loss:', loss)
+			
 	writer.close()
 	
 	if not os.path.exists(args.save_dir):

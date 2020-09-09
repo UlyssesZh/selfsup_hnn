@@ -7,11 +7,12 @@ import sys
 sys.path.append('..')
 import dataset
 import torch
+import random
 dataset.generate_dataset('../datasets/spring/spring-#{i}.json',
-                         (lambda tx: tx[1]**2+tx[2]**2),
-                         118, 42,
-                         torch.tensor([-100.,-100.]), torch.tensor([100.,100.]),
-                         100, id=#{i})
+                         (lambda x: x[:,0]**2+x[:,1]**2),
+                         0., random.random()*2+1, 200,
+                         torch.tensor([-.71,-.71]), torch.tensor([.71,.71]),
+                         id=#{i})
 " | python3
 HEREDOC
 end
