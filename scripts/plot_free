@@ -1,7 +1,7 @@
 python3 ../output.py \
   --load_path ../path/free.tar \
   --initial 0,0.1 \
-  --max_t 100 \
-  --steps 1000 \
+  --max_t 10 \
+  --steps 100 \
   --n 1 \
-  --ground_truth "tx[2]**2"
+  --ground_truth "x[1]**2"

@@ -3,9 +3,13 @@ import os
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
+import numpy as np
 
 from dataset import load_dataset
-from the_hnn import SelfSupHNN
+from hnn import HNN
+from utils import L2_loss
+from nn_models import MLP
+from torchdiffeq import odeint
 
 def get_args():
 	parser = ArgumentParser(description=None)
@@ -16,7 +20,10 @@ def get_args():
 	parser.add_argument('--save_dir', default='path')
 	parser.add_argument('--name', default='selfsup_hnn')
 	parser.add_argument('--n', type=int)
-	parser.add_argument('--log_dir', default='runs', type=str)
+	parser.add_argument('--log_dir', default=None, type=str)
+	parser.add_argument('--field_type', default='solenoidal', type=str)
+	parser.add_argument('--seed', default=0, type=int)
+	parser.add_argument('--epoches', default=200, type=int)
 	return parser.parse_args()
 
 total_i = 0
@@ -25,14 +32,12 @@ def log(writer, loss):
 	writer.add_scalar('Loss/train', loss, total_i)
 	total_i += 1
 
-def train(writer, model, dataset, learn_rate):
-	optim = torch.optim.Adam(model.parameters(), learn_rate, weight_decay=1e-4)
-	loss = model.loss(dataset['x1'], dataset['x2'], dataset['t'])
-	optim.zero_grad()
-	loss.backward()
-	optim.step()
+def train(writer, model, data, optim):
+	x1 = torch.tensor(data['x1'], requires_grad=True)
+	x2 = torch.tensor(data['x2'])
+	loss = L2_loss(odeint(lambda t, x: model.time_derivative(x), x1, torch.tensor(data['t']))[-1], x2)
+	loss.backward(); optim.step(); optim.zero_grad()
 	log(writer, loss)
-	return loss.item()
 
 if __name__ == '__main__':
 	args = get_args()
@@ -42,27 +47,25 @@ if __name__ == '__main__':
 	if not args.n:
 		print('Specify DOF with "--n"')
 		exit()
-		
-	writer = SummaryWriter(log_dir=args.log_dir)
-	model = SelfSupHNN(args.n, args.hidden_dim, args.nonlinearity)
 	
 	if torch.cuda.is_available():
 		torch.device('cuda')
 		torch.set_default_tensor_type('torch.cuda.FloatTensor')
-		model.cuda()
 	torch.autograd.set_detect_anomaly(True)
 	
-	step = 0
-	dataset_list = [load_dataset(f'{args.dataset_dir}/{dataset}')
-	                for dataset in os.listdir(args.dataset_dir)]
-	for epoch in range(160):
-		for dataset in dataset_list:
-			dataset = dataset_list[0]#
-			loss = train(writer, model, dataset, args.learn_rate)
-			step += 1
-			if step % 200 == 0:
-				print(step, '- loss:', loss)
-			
+	torch.manual_seed(args.seed)
+	np.random.seed(args.seed)
+	
+	writer = SummaryWriter(log_dir=args.log_dir)
+	nn_model = MLP(args.n * 2, args.hidden_dim, 2, args.nonlinearity)
+	model = HNN(args.n * 2, differentiable_model=nn_model, field_type=args.field_type)
+	
+	optim = torch.optim.Adam(model.parameters(), args.learn_rate, weight_decay=1e-4)
+	for data in os.listdir(args.dataset_dir):
+		data = load_dataset(f'{args.dataset_dir}/{data}')
+		for epoch in range(args.epoches):
+			train(writer, model, data, optim)
+	
 	writer.close()
 	
 	if not os.path.exists(args.save_dir):

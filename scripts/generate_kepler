@@ -11,7 +11,7 @@ import random
 dataset.generate_dataset('../datasets/kepler/kepler-#{i}.json',
                          lambda x: x[:,2]**2+x[:,3]**2+(x[:,0]**2+x[:,1]**2)**-.5,
                          0, random.random()*2+1, 200,
-                         torch.tensor([-1.,-1.,-1.,-1.]), torch.tensor([1.,1.,1.,1.]),
+                         torch.tensor([-.5,-.5,-.5,-.5]), torch.tensor([.5,.5,.5,.5]),
                          id=#{i})
 " | python3
 HEREDOC
