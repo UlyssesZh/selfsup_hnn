@@ -52,7 +52,8 @@
 本参赛团队声明所提交的论文是在指导老师指导下进行的研究工作和取得的研究成果。尽本团队所知，除了文中特别加以标注和致谢中所罗列的内容以外，论文中不包含其他人已经发表或撰写过的研究成果。若有不实之处，本人愿意承担一切相关责任。\par
 ~\par
 ~\par
-参赛队员：\underline{詹有丘}\qquad 指导老师：\underline{~~~}\par
+参赛队员：$\vcenter{\hbox{\includegraphics[width=4em]{zhanyouqiu.png}}}$\qquad
+指导老师：\par
 ~\par
 \begin{flushright}\chinesedate\today\end{flushright}
 
@@ -63,7 +64,14 @@
 \maketitle
 
 \begin{abstract}
-TBD
+We developed a method to derive the hamiltonian of an unknown system by machine learning the motions of the system.
+We modified the training process of Greydanus et al.'s hamiltonian neural network
+to make it be capable of learning from a dataset without the change-of-state ground truth.
+In other word, the learning process is self-supervised.
+This improvement can extend the application of the hamiltonian neural network
+because it is sometimes difficult to accurately measure the change of state of the system.
+Our model can now be able to learn the free particle system
+and the harmonic oscillator system.
 \end{abstract}
 
 \keywords{hamiltonian, machine learning, mechanics}
@@ -319,7 +327,7 @@ when the loss converges.
 After switching the data several times,
 the parameters should converge to a correct value.
 
-\section{Tasks}
+\section{Experiments}
 
 \subsection{Free particle}
 
@@ -409,14 +417,25 @@ which is the phase path \cite[p. 146]{landau1976mechanics}\cite[p. 68]{arnold198
 As can be seen, it can give the correct result:
 the phase path is a circle \cite[p. 17]{arnold1989mathmech}.
 
-\subsection{Kepler's problem}
+\section{Possible further improvements}
 
-The Kepler's problem is the motion of a particle in Coulomb field.
-Its hamiltonian is
-\begin{equation*}
-	\mathcal H\left(t,q,p\right):=\frac{p_0^2+p_1^2}{2m}-\frac\alpha{\sqrt{q_0^2+q_1^2}}.
-\end{equation*}
-To be simple, we take $m:=\frac12$ and $\alpha:=1$.
+The model is currently not capable enough to learn complex systems quickly
+(like those with more than one DOF).
+In other words, the original neural network model does not fit with the self-supervised learning pattern when it comes to complex systems.
+The problem can be solved if an improved neural network customized to hamiltonian learning is developed,
+but whether such an improvement exists is not sure.
+
+The other possible improvement is to make the $\mathbf x$ not necessarily be the canonical coordinates but be the arbitrary generalized coordinates.
+This can be useful because it is sometimes difficult to derive the generalized momentum of a system during a physics experiment.
+The hamiltonian neural network is not capable of this, but the lagrangian neural network is for this \cite{cranmer2020lagrangian}.
+However, there are also some difficulties in using the lagrangian neural network with the self-supervised learning pattern.
+
+\section{Conclusion}
+
+We have developed a method to use Greydanus et al.'s hamiltonian neural network \cite{greydanus2019hamiltonian}
+to learn a hamiltonian mechanics system using self-supervised machine learning.
+Besides most of the advantages of theirs (can conserve the energy and has reversibility),
+the self-supervised learning pattern can make it more capable when it comes to applications.
 
 \bibliographystyle{abbrv}
 \bibliography{selfsup_hnn}
