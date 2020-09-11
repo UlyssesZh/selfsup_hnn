@@ -30,8 +30,11 @@ def generate_dataset(save_path, hamiltonian, start_t, end_t, samples, x_min, x_m
 	fun = dx_fun(hamiltonian)
 	t_span = [start_t, end_t]
 	x1 = [(x_min + torch.rand(n*2) * (x_max - x_min)).tolist() for _ in range(samples)]
-	dataset = {'t': t_span, 'x1': x1,
-	           'x2': odeint(fun, torch.tensor(x1, requires_grad=True), torch.tensor(t_span))[-1].tolist()}
+	x1 = torch.tensor(x1, requires_grad=True)
+	x2 = odeint(fun, x1, torch.tensor(t_span))[-1]
+	dataset = {'t': t_span,
+	           'x1': x1.tolist(), 'dx1': fun(start_t, x1).tolist(),
+	           'x2': x2.tolist(), 'dx2': fun(end_t, x2).tolist()}
 	with open(save_path, "w") as f:
 		json.dump(dataset, f)
 	print(f"{id}: finished")

@@ -80,12 +80,23 @@ and the harmonic oscillator system.
 
 \section{Introduction}
 
+Neural networks excel in learning from given datasets.
+Besides image classification and strategy decision,
+its ability also makes it capable to derive the infomation (mathematical descriptions) about a physics system.
+If a neural network can learn a physics system according to the motion of it,
+there can be a lot of applications that can be done with it
+because deriving the motion of a system only requires measuring,
+but deriving the abstract mathematical form of a system requires induction,
+which is more difficult.
+Thus, we want to develop a machine learning method in physics.
+
+One of the most often used description of mechanics systems is the hamiltonian.
 When one observes the motion of a system,
 he may be curious about what is the hamiltonian of it
 if such a hamiltonian exists.
 
 Here there have been several approaches to do this,
-such as the hamiltonian neural network \cite{greydanus2019hamiltonian},
+such as the hamiltonian neural network (HNN) \cite{greydanus2019hamiltonian},
 the lagrangian neural network \cite{cranmer2020lagrangian},
 and the neural ODE \cite{chen2018ode}.
 Like what we are going to do,
@@ -97,6 +108,9 @@ they train the neural network in a supervised mode,
 which means there are $\mathrm d\mathbf x/\mathrm dt$ ground truth in the dataset.
 However, in a physics experiment, measuring the change rate of the state is probably more difficult than directly measuring the state.
 Thus, we want to introduce a method to optimize the neural network in a self-supervised way.
+
+Here in the paper, we will show how to use self-supervised learning for learning the hamiltonian of a system (based on Greydanus et al.'s HNN \cite{greydanus2019hamiltonian}),
+and compare the result with ours (learning using a dataset without $\dot{\mathbf x}$ ground truth) and theirs (learning using the same dataset with ground truth).
 
 \section{Canonical equation and ODE}
 
@@ -180,7 +194,7 @@ The integral can be calculated using the \href{https://github.com/rtqichen/torch
 		\draw[->] (-1,-6.5) -- (-4.5,-6.5) -- (-4.5,-1.5) -- (-4,-1.5);
 		\node[anchor=east] at (-4.5,-4) {Optimize};
 	\end{tikzpicture}
-	\caption{The train circle of a supervised hamiltonian neural network \cite{greydanus2019hamiltonian}}
+	\caption{The train circle of a supervised HNN \cite{greydanus2019hamiltonian}}
 	\label{fig:sup_train}
 \end{figure}
 
@@ -226,7 +240,7 @@ The integral can be calculated using the \href{https://github.com/rtqichen/torch
 		\draw[->] (-1,-10.5) -- (-4.5,-10.5) -- (-4.5,-2.5) -- (-4,-2.5);
 		\node[anchor=east] at (-4.5,-6) {Optimize};
 	\end{tikzpicture}
-	\caption{The train circle of a self-supervised hamiltonian neural network}
+	\caption{The train circle of a self-supervised HNN}
 	\label{fig:selfsup_train}
 \end{figure}
 
@@ -250,10 +264,21 @@ The model uses the loss inspired from Equation \ref{eq:int}
 where $\left(t_1,\mathbf x\left(t_1\right)\right)$ and $\left(t_1,\mathbf x\left(t_1\right)\right)$
 are 2 samples from the same motion of the system.
 The complete process of a traning circle is shown in Figure \ref{fig:selfsup_train}.
-For comparison, the train circle of the supervised hamiltonian neural network
+For comparison, the train circle of the supervised HNN
 is shown in Figure \ref{fig:sup_train}.
 
 The Adam optimizer \cite{kingma2017adam} is used for optimizing the neural network.
+
+\subsection{The structure of the neural network}
+
+The structure of the neural network is a simple multilayer perceptron (MLP),
+which is the same as that adopted in Greydanus et al.'s HNN \cite{greydanus2019hamiltonian}.
+
+There are 3 layers of linear mapping, the last of which outputs the value of hamiltonian.
+Between 2 linear layers, there is a nonlinearity layer, as which we adopted tanh.
+
+The hidden dimension (the input size and output size of the 2nd linear mapping)
+is taken as $200$ in the following experiments in Section \ref{sec:experiments}.
 
 \section{Few-parameters optimization}
 
@@ -328,6 +353,7 @@ After switching the data several times,
 the parameters should converge to a correct value.
 
 \section{Experiments}
+\label{sec:experiments}
 
 \subsection{Free particle}
 
@@ -385,6 +411,20 @@ The loss change in shown in Figure \ref{fig:free_loss}.
 	\label{fig:spring_comp}
 \end{figure}
 
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.45\linewidth}
+		\includegraphics[width=\linewidth]{loss_comp.png}
+		\caption{Overview of how the two losses change}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.45\linewidth}
+		\includegraphics[width=\linewidth]{loss_comp2.png}
+		\caption{Zoomed to show the change of loss more clearly}
+	\end{subfigure}
+	\caption{The comparation of the loss of the result given by Greydanus et al.'s HNN and that given by ours, where the yellow line is theirs, and the blue one is ours}
+	\label{fig:loss_comp}
+\end{figure}
+
 A harmonic oscillator is a system with 1 DOF whose hamiltonian is \cite[p. 157]{landau1976mechanics}
 \begin{equation*}
 	\mathcal H\left(t,q,p\right):=\frac{p^2}{2m}+\frac12kq^2,
@@ -417,6 +457,14 @@ which is the phase path \cite[p. 146]{landau1976mechanics}\cite[p. 68]{arnold198
 As can be seen, it can give the correct result:
 the phase path is a circle \cite[p. 17]{arnold1989mathmech}.
 
+Here we can compare the result of the self-supervised HNN with the original Greydanus et al.'s HNN.
+The graph of MSE loss between $\mathbf x$ predicted by HNN and the actual $\mathbf x$ w.r.t. $t$ is shown in Figure \ref{fig:loss_comp}.
+As can be seen, loss of ours is much less than that of theirs
+despite that ours did not use the $\dot{\mathbf x}$ ground truth in the dataset.
+However, the cost is that our neural networks require much more time
+(48 minutes on a device with GeForce RTX 2070 SUPER) to train
+than theirs (less than 1 minute on the same device).
+
 \section{Possible further improvements}
 
 The model is currently not capable enough to learn complex systems quickly
@@ -427,12 +475,12 @@ but whether such an improvement exists is not sure.
 
 The other possible improvement is to make the $\mathbf x$ not necessarily be the canonical coordinates but be the arbitrary generalized coordinates.
 This can be useful because it is sometimes difficult to derive the generalized momentum of a system during a physics experiment.
-The hamiltonian neural network is not capable of this, but the lagrangian neural network is for this \cite{cranmer2020lagrangian}.
+The HNN is not capable of this, but the lagrangian neural network (LNN) is for this \cite{cranmer2020lagrangian}.
 However, there are also some difficulties in using the lagrangian neural network with the self-supervised learning pattern.
 
 \section{Conclusion}
 
-We have developed a method to use Greydanus et al.'s hamiltonian neural network \cite{greydanus2019hamiltonian}
+We have developed a method to use Greydanus et al.'s HNN \cite{greydanus2019hamiltonian}
 to learn a hamiltonian mechanics system using self-supervised machine learning.
 Besides most of the advantages of theirs (can conserve the energy and has reversibility),
 the self-supervised learning pattern can make it more capable when it comes to applications.

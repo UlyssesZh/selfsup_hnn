@@ -8,6 +8,7 @@ import torch
 from nn_models import MLP
 from hnn import HNN
 from hamiltonian import dx_fun
+from utils import L2_loss
 
 def get_args():
 	parser = ArgumentParser(description=None)
@@ -27,15 +28,17 @@ if __name__ == '__main__':
 	initial_list = [float(s) for s in args.initial.split(',')]
 	nn_model = MLP(args.n * 2, args.hidden_dim, 2, args.nonlinearity)
 	model = HNN(args.n * 2, differentiable_model=nn_model, field_type=args.field_type)
-	model.load_state_dict(torch.load(args.load_path))
-	model.cpu()
 	fig, ax = plt.subplots()
 	t = torch.linspace(0, args.max_t, args.steps)
-	initial = torch.tensor([initial_list], requires_grad=True)
-	x = odeint(lambda t, x: model.time_derivative(x), initial, t).detach().squeeze()
 	initial = torch.tensor(initial_list, requires_grad=True)
-	y = odeint(dx_fun(eval(f'lambda x: {args.ground_truth}'), batch=False), initial, t).detach()
-	for i in range(args.n * 2):
-		ax.plot(t, x[:, i])
-		ax.plot(t, y[:, i])
+	truth = odeint(dx_fun(eval(f'lambda x: {args.ground_truth}'), batch=False), initial, t).detach()
+	initial = torch.tensor([initial_list], requires_grad=True)
+	for path in args.load_path.split(','):
+		model.load_state_dict(torch.load(path))
+		model.cpu()
+		x = odeint(lambda t, x: model.time_derivative(x), initial, t).detach().squeeze()
+		loss = torch.zeros(args.steps)
+		for i in range(args.steps):
+			loss[i] = L2_loss(x[i], truth[i])
+		ax.plot(t, loss)
 	plt.show()
