@@ -164,84 +164,87 @@ According to Equation \ref{eq:ode}, the difference between $\mathbf x$ at 2 diff
 The integral can be calculated using the \href{https://github.com/rtqichen/torchdiffeq}{torchdiffeq} Python package \cite{chen2018ode}.
 
 \begin{figure}[h!]
-	\centering
-	\begin{tikzpicture}
-		\tikzstyle{neuron}=[circle,draw=black,minimum size=0.6cm,inner sep=0]
-		\foreach \x in {-1,...,1}
-			\node[neuron] (input\x) at (1.5*\x, 0) {};
-		\foreach \x in {-2,...,2}
-			\node[neuron] (hidden\x) at (1.5*\x, -2.5) {};
-		\node[neuron] (output) at (0, -4) {};
+	\begin{subfigure}[b]{\linewidth}
+		\centering
+			\begin{tikzpicture}[scale=0.8]
+			\tikzstyle{neuron}=[circle,draw=black,minimum size=0.6cm,inner sep=0]
+			\foreach \x in {-1,...,1}
+				\node[neuron] (input\x) at (1.5*\x, 0) {};
+			\foreach \x in {-2,...,2}
+				\node[neuron] (hidden\x) at (1.5*\x, -2.5) {};
+			\node[neuron] (output) at (0, -4) {};
 
-		\foreach \xin in {-1,...,1}
-			\foreach \xout in {-2,...,2}
-				\path[->] (input\xin) edge (hidden\xout);
-		\foreach \xin in {-2,...,2}
-			\path[->] (hidden\xin) edge (output);
+			\foreach \xin in {-1,...,1}
+				\foreach \xout in {-2,...,2}
+					\path[->] (input\xin) edge (hidden\xout);
+			\foreach \xin in {-2,...,2}
+				\path[->] (hidden\xin) edge (output);
 
-		\node at (-1.5,0.6cm+10pt) {$t$};
-		\draw[decorate,decoration={brace,amplitude=10pt},xshift=0,yshift=0.6cm]
-				(-0.3,-0.3) -- (1.8,-0.3) node[midway,yshift=0.6cm] {$\mathbf x$};
-		\node at (0,-4.6) {$\mathcal H$};
+			\node at (-1.5,0.6cm+10pt) {$t$};
+			\draw[decorate,decoration={brace,amplitude=10pt},xshift=0,yshift=0.6cm]
+					(-0.3,-0.3) -- (1.8,-0.3) node[midway,yshift=0.6cm] {$\mathbf x$};
+			\node at (0,-4.6) {$\mathcal H$};
 
-		\draw (-4,1.5) rectangle (4,-5);
-		\draw[->] (0,-5) -- (0,-6) node[midway,anchor=west] {$\boldsymbol\omega\nabla_{\mathbf x}$};
-		\draw[rounded corners] (-1,-6) rectangle (1,-7);
-		\node at (0,-6.5) {MSE loss};
-		\node[anchor=west] (truth) at (2,-6.5) {$\dot{\mathbf x}$};
-		\draw[->] (truth) -- (1,-6.5);
+			\draw (-4,1.5) rectangle (4,-5);
+			\draw[->] (0,-5) -- (0,-6) node[midway,anchor=west] {$\boldsymbol\omega\nabla_{\mathbf x}$};
+			\draw[rounded corners] (-1,-6) rectangle (1,-7);
+			\node at (0,-6.5) {MSE loss};
+			\node[anchor=west] (truth) at (2,-6.5) {$\dot{\mathbf x}$};
+			\draw[->] (truth) -- (1,-6.5);
 
-		\draw[->] (-1,-6.5) -- (-4.5,-6.5) -- (-4.5,-1.5) -- (-4,-1.5);
-		\node[anchor=east] at (-4.5,-4) {Optimize};
-	\end{tikzpicture}
-	\caption{The train circle of a supervised HNN \cite{greydanus2019hamiltonian}}
-	\label{fig:sup_train}
-\end{figure}
+			\draw[->] (-1,-6.5) -- (-4.5,-6.5) -- (-4.5,-1.5) -- (-4,-1.5);
+			\node[anchor=east] at (-4.5,-4) {Optimize};
+		\end{tikzpicture}
+		\caption{The train circle of a supervised HNN \cite{greydanus2019hamiltonian}}
+		\label{fig:sup_train}
+	\end{subfigure}
 
-\begin{figure}[h!]
-	\centering
-	\begin{tikzpicture}
-		\tikzstyle{neuron}=[circle,draw=black,minimum size=0.6cm,inner sep=0]
-		\foreach \x in {-1,...,1}
-			\node[neuron] (input\x) at (1.5*\x, 0) {};
-		\foreach \x in {-2,...,2}
-			\node[neuron] (hidden\x) at (1.5*\x, -2.5) {};
-		\node[neuron] (output) at (0, -4) {};
+	\begin{subfigure}[b]{\linewidth}
+		\centering
+		\begin{tikzpicture}[scale=0.8]
+			\tikzstyle{neuron}=[circle,draw=black,minimum size=0.6cm,inner sep=0]
+			\foreach \x in {-1,...,1}
+				\node[neuron] (input\x) at (1.5*\x, 0) {};
+			\foreach \x in {-2,...,2}
+				\node[neuron] (hidden\x) at (1.5*\x, -2.5) {};
+			\node[neuron] (output) at (0, -4) {};
 
-		\foreach \xin in {-1,...,1}
-			\foreach \xout in {-2,...,2}
-				\path[->] (input\xin) edge (hidden\xout);
-		\foreach \xin in {-2,...,2}
-			\path[->] (hidden\xin) edge (output);
+			\foreach \xin in {-1,...,1}
+				\foreach \xout in {-2,...,2}
+					\path[->] (input\xin) edge (hidden\xout);
+			\foreach \xin in {-2,...,2}
+				\path[->] (hidden\xin) edge (output);
 
-		\node at (-1.5,0.6cm+10pt) {$t$};
-		\draw[decorate,decoration={brace,amplitude=10pt},xshift=0,yshift=0.6cm]
-				(-0.3,-0.3) -- (1.8,-0.3) node[midway,yshift=0.6cm] {$\mathbf x$};
-		\node at (0,-4.6) {$\mathcal H$};
+			\node at (-1.5,0.6cm+10pt) {$t$};
+			\draw[decorate,decoration={brace,amplitude=10pt},xshift=0,yshift=0.6cm]
+					(-0.3,-0.3) -- (1.8,-0.3) node[midway,yshift=0.6cm] {$\mathbf x$};
+			\node at (0,-4.6) {$\mathcal H$};
 
-		\draw (-4,1.5) rectangle (4,-5);
-		\draw[->] (0,-5) -- (0,-6) node[midway,anchor=west] {$\boldsymbol\omega\nabla_{\mathbf x}$};
+			\draw (-4,1.5) rectangle (4,-5);
+			\draw[->] (0,-5) -- (0,-6) node[midway,anchor=west] {$\boldsymbol\omega\nabla_{\mathbf x}$};
 
-		\draw (-2,-6) rectangle (2,-8.8);
-		\node[anchor=south] (tin) at (-0.5,-6.5) {$t$};
-		\node[anchor=south] (xin) at (0.5,-6.5) {$\mathbf x$};
-		\draw[->] (tin) -- +(0,-0.5);
-		\draw[->] (xin) -- +(0,-0.5);
-		\draw (-1,-6.8) rectangle (1,-7.5);
-		\node[anchor=north] (fout) at (0,-8) {$\mathbf f\left(t,\mathbf x\right)$};
-		\draw[->] (0,-7.5) -- (fout);
+			\draw (-2,-6) rectangle (2,-8.8);
+			\node[anchor=south] (tin) at (-0.5,-6.5) {$t$};
+			\node[anchor=south] (xin) at (0.5,-6.5) {$\mathbf x$};
+			\draw[->] (tin) -- +(0,-0.5);
+			\draw[->] (xin) -- +(0,-0.5);
+			\draw (-1,-6.8) rectangle (1,-7.5);
+			\node[anchor=north] (fout) at (0,-8) {$\mathbf f\left(t,\mathbf x\right)$};
+			\draw[->] (0,-7.5) -- (fout);
 
-		\draw[->] (0,-8.8) -- (0,-10) node[midway,anchor=west] {$\int_{t_1}^{t_2}$};
-		\draw[rounded corners] (-1,-10) rectangle (1,-11);
-		\node at (0,-10.5) {MSE loss};
-		\node[anchor=west] (truth) at (2,-10.5) {$\mathbf x\left(t_2\right)-\mathbf x\left(t_1\right)$};
-		\draw[->] (truth) -- (1,-10.5);
+			\draw[->] (0,-8.8) -- (0,-10) node[midway,anchor=west] {$\int_{t_1}^{t_2}$};
+			\draw[rounded corners] (-1,-10) rectangle (1,-11);
+			\node at (0,-10.5) {MSE loss};
+			\node[anchor=west] (truth) at (2,-10.5) {$\mathbf x\left(t_2\right)-\mathbf x\left(t_1\right)$};
+			\draw[->] (truth) -- (1,-10.5);
 
-		\draw[->] (-1,-10.5) -- (-4.5,-10.5) -- (-4.5,-2.5) -- (-4,-2.5);
-		\node[anchor=east] at (-4.5,-6) {Optimize};
-	\end{tikzpicture}
-	\caption{The train circle of a self-supervised HNN}
-	\label{fig:selfsup_train}
+			\draw[->] (-1,-10.5) -- (-4.5,-10.5) -- (-4.5,-2.5) -- (-4,-2.5);
+			\node[anchor=east] at (-4.5,-6) {Optimize};
+		\end{tikzpicture}
+		\caption{The train circle of a self-supervised HNN}
+		\label{fig:selfsup_train}
+	\end{subfigure}
+	\caption{The train circle of the neural network}
 \end{figure}
 
 \section{Training with proposed loss}
@@ -415,13 +418,13 @@ The loss change in shown in Figure \ref{fig:free_loss}.
 	\centering
 	\begin{subfigure}[b]{0.45\linewidth}
 		\includegraphics[width=\linewidth]{loss_comp.png}
-		\caption{Overview of how the two losses change}
+		\caption{Overview of how the two estimation erros change}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.45\linewidth}
 		\includegraphics[width=\linewidth]{loss_comp2.png}
-		\caption{Zoomed to show the change of loss more clearly}
+		\caption{Details of estimation errors}
 	\end{subfigure}
-	\caption{The comparation of the loss of the result given by Greydanus et al.'s HNN and that given by ours, where the yellow line is theirs, and the blue one is ours}
+	\caption{The comparation of the estimation of the result given by Greydanus et al.'s HNN and that given by ours, where the yellow line is theirs, and the blue one is ours}
 	\label{fig:loss_comp}
 \end{figure}
 
@@ -458,7 +461,7 @@ As can be seen, it can give the correct result:
 the phase path is a circle \cite[p. 17]{arnold1989mathmech}.
 
 Here we can compare the result of the self-supervised HNN with the original Greydanus et al.'s HNN.
-The graph of MSE loss between $\mathbf x$ predicted by HNN and the actual $\mathbf x$ w.r.t. $t$ is shown in Figure \ref{fig:loss_comp}.
+The graph of MSE between $\mathbf x$ predicted by HNN and the actual $\mathbf x$ w.r.t. $t$ is shown in Figure \ref{fig:loss_comp}.
 As can be seen, loss of ours is much less than that of theirs
 despite that ours did not use the $\dot{\mathbf x}$ ground truth in the dataset.
 However, the cost is that our neural networks require much more time
