@@ -40,7 +40,7 @@
 ~\par
 \noindent 指导教师姓名：\underline{~~~}\par
 ~\par
-\noindent 论文题目：\ul{A multifunctional hamiltonian mechanics simulator and some of its application examples}
+\noindent 论文题目：\ul{Self-supervised hamiltonian mechanics neural networks}
 
 \newpage
 
@@ -461,8 +461,8 @@ As can be seen, it can give the correct result:
 the phase path is a circle \cite[p. 17]{arnold1989mathmech}.
 
 Here we can compare the result of the self-supervised HNN with the original Greydanus et al.'s HNN.
-The graph of MSE between $\mathbf x$ predicted by HNN and the actual $\mathbf x$ w.r.t. $t$ is shown in Figure \ref{fig:loss_comp}.
-As can be seen, loss of ours is much less than that of theirs
+The graph of estimation error (MSE between $\mathbf x$ estimated by the neural network and the actual $\mathbf x$) w.r.t. $t$ is shown in Figure \ref{fig:loss_comp}.
+As can be seen, estimation error of ours is much less than that of theirs
 despite that ours did not use the $\dot{\mathbf x}$ ground truth in the dataset.
 However, the cost is that our neural networks require much more time
 (48 minutes on a device with GeForce RTX 2070 SUPER) to train
@@ -483,7 +483,7 @@ However, there are also some difficulties in using the lagrangian neural network
 
 \section{Conclusion}
 
-We have developed a method to use Greydanus et al.'s HNN \cite{greydanus2019hamiltonian}
+Inspired by HNN, we propose a new loss
 to learn a hamiltonian mechanics system using self-supervised machine learning.
 Besides most of the advantages of theirs (can conserve the energy and has reversibility),
 the self-supervised learning pattern can make it more capable when it comes to applications.
